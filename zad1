@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+h = 0.001
+bet = 1
+sig = 1 
+gam = 0.1
+
+s = [0.99]
+e = [0.01]
+i = [0.0]
+r = [0.0]
+
+def ds(bet, i, s):
+    return - bet * i * s 
+
+def de(bet, i, s, sig, e):
+    return bet * i * s - (sig * e)
+
+def di(sig, e, i, gam):
+    return sig * e - (gam * i)
+
+def dr(gam, i):
+    return gam * i
+
+def s_rk(bet, s, i):
+    f1 = h * ds(bet, s[-1], i[-1])
+    f2 = h * ds(bet, s[-1] + 1/2 * h, i[-1] + 1/2 * f1)
+    f3 = h * ds(bet, s[-1] + 1/2 * h, i[-1] + 1/2 * f2)
+    f4 = h * ds(bet, s[-1] + h, i[-1] + f3)
+
+    return s[-1] + 1/6 * (f1 + 2*f2 + 2*f3 + f4)
+
+def e_rk(bet, i, s, sig, e):
+    f1 = h * de(bet, i[-1], s[-1], sig, e[-1])
+    f2 = h * de(bet, i[-1] + 1/2 * h, s[-1] + 1/2 * f1, sig, e[-1] + 1/2 * f1)
+    f3 = h * de(bet, i[-1] + 1/2 * h, s[-1] + 1/2 * f2, sig, e[-1] + 1/2 * f2)
+    f4 = h * de(bet, i[-1] + h, s[-1] + f3, sig, e[-1] + f3)
+
+    return e[-1] + 1/6 * (f1 + 2*f2 + 2*f3 + f4)
+
+def i_rk(sig, e, i, gam):
+    f1 = h * di(sig, e[-1], i[-1], gam)
+    f2 = h * di(sig, e[-1] + 1/2 * h, i[-1] + 1/2 * f1, gam)
+    f3 = h * di(sig, e[-1] + 1/2 * h, i[-1] + 1/2 * f2, gam)
+    f4 = h * di(sig, e[-1] + h, i[-1] + f3, gam)
+
+    return i[-1] + 1/6 * (f1 + 2*f2 + 2*f3 + f4)
+
+def r_rk(gam, i):
+    f1 = h * dr(gam, i[-1])
+    f2 = h * dr(gam, i[-1] + 1/2 * f1)
+    f3 = h * dr(gam, i[-1] + 1/2 * f2)
+    f4 = h * dr(gam, i[-1] + f3)
+
+    return r[-1] + 1/6 * (f1 + 2*f2 + 2*f3 + f4)
+
+
+#parametry wykresu
+x = np.arange(0, 50, 0.001)
+
+for y in x:
+    ns, ni, nr, ne = s_rk(bet, s, i), i_rk(sig, e, i, gam), r_rk(gam, i), e_rk(bet, i, s, sig, e)
+
+    s = np.append(s, ns)
+    i = np.append(i, ni)
+    r = np.append(r, nr)
+    e = np.append(e, ne)
+
+
+plt.plot(x, s[:-1], label = 'Susceptible')
+plt.plot(x, e[:-1], label = 'Exposed')
+plt.plot(x, i[:-1], label = 'Infectious')
+plt.plot(x, r[:-1], label = 'Removed')
+plt.legend()
+plt.show()
